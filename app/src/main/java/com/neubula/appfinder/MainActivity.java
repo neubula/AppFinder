@@ -16,6 +16,8 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
@@ -27,17 +29,24 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class MainActivity extends Activity {
 	
 //	private static final String TAG = "Main Activity--";
 	
-	public RelativeLayout div_mic;
-	
+
 	public Context context;
 
-	public EditText editTextApp;
-	public ListView listViewApp;
-	public AppListAdapter appListAdapter;
+	@BindView(R.id.div_mic)
+	RelativeLayout div_mic;
+	@BindView(R.id.editTextApp)
+	EditText editTextApp;
+	@BindView(R.id.listViewApp)
+	RecyclerView listViewApp;
+
+	AppListAdapter appListAdapter;
 	
 
 	PackageManager pm;
@@ -54,6 +63,7 @@ public class MainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
+		ButterKnife.bind(this);
 		
 		context = MainActivity.this;
 
@@ -64,15 +74,23 @@ public class MainActivity extends Activity {
 
 		pm = getPackageManager();
 		allPackages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-		packages = new LinkedList<ApplicationInfo>();
+		packages = new LinkedList<>();
 
 		intializePackage();
 		
-		div_mic = (RelativeLayout) findViewById(R.id.div_mic);
-		editTextApp = (EditText) findViewById(R.id.editTextApp);
-		listViewApp = (ListView) findViewById(R.id.listViewApp);
+//		div_mic = (RelativeLayout) findViewById(R.id.div_mic);
+//		editTextApp = (EditText) findViewById(R.id.editTextApp);
+//		listViewApp = (ListView) findViewById(R.id.listViewApp);
+
+//		Intent intent = new Intent(Intent.ACTION_DELETE);
+//		intent.setData(Uri.parse("package:com.example.mypackage"));
+//		startActivity(intent);
 
 		appListAdapter = new AppListAdapter(context, packages);
+
+		listViewApp.setLayoutManager(new GridLayoutManager(context,1));
+
+		listViewApp.setHasFixedSize(false);
 
 		listViewApp.setAdapter(appListAdapter);
 
@@ -82,31 +100,31 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 
-		listViewApp.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-				ApplicationInfo packageInfo = packages.get(position);
-
-				if (packageInfo != null) {
-					if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
-						Intent intent = pm.getLaunchIntentForPackage(packageInfo.packageName);
-						startActivity(intent);
-					} else {
-						Toast.makeText(context, "App will not start. No name.", Toast.LENGTH_SHORT).show();
-					}
-				} else {
-					Toast.makeText(context, "App will not start. No package.", Toast.LENGTH_SHORT).show();
-				}
-			}
-		});
+//		listViewApp.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//			@Override
+//			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//
+//				ApplicationInfo packageInfo = packages.get(position);
+//
+//				if (packageInfo != null) {
+//					if (pm.getLaunchIntentForPackage(packageInfo.packageName) != null) {
+//						Intent intent = pm.getLaunchIntentForPackage(packageInfo.packageName);
+//						startActivity(intent);
+//					} else {
+//						Toast.makeText(context, "App will not start. No name.", Toast.LENGTH_SHORT).show();
+//					}
+//				} else {
+//					Toast.makeText(context, "App will not start. No package.", Toast.LENGTH_SHORT).show();
+//				}
+//			}
+//		});
 
 		editTextApp.addTextChangedListener(new TextWatcher() {
 
 			@Override
 			public void onTextChanged(CharSequence cs, int arg1, int arg2, int arg3) {
-				// When user changed the Text
-				// MainActivity.this.appListAdapter.getFilter().filter(cs);
+//				 When user changed the Text
+				 appListAdapter.getFilter().filter(cs);
 
 //				List<ApplicationInfo> newPackages = new LinkedList<ApplicationInfo>();
 				/*for (ApplicationInfo packageInfo : allPackages) {
@@ -114,19 +132,19 @@ public class MainActivity extends Activity {
 						packages.add(packageInfo);
 				}*/
 
-				intializePackage();
-
-				ListIterator<ApplicationInfo> litr = packages.listIterator();
-				while(litr.hasNext()) {
-					ApplicationInfo packageInfo = litr.next();
-					if (pm.getApplicationLabel(packageInfo) != null) {
-						String dataConstraint = cs.toString();
-						String data = pm.getApplicationLabel(packageInfo).toString();
-						if (!data.toLowerCase().startsWith(dataConstraint)) {
-							litr.remove();
-						}
-					}
-				}
+//				intializePackage();
+//
+//				ListIterator<ApplicationInfo> litr = packages.listIterator();
+//				while(litr.hasNext()) {
+//					ApplicationInfo packageInfo = litr.next();
+//					if (pm.getApplicationLabel(packageInfo) != null) {
+//						String dataConstraint = cs.toString();
+//						String data = pm.getApplicationLabel(packageInfo).toString();
+//						if (!data.toLowerCase().startsWith(dataConstraint)) {
+//							litr.remove();
+//						}
+//					}
+//				}
 
 				/*for (ApplicationInfo packageInfo : packages) {
 
@@ -138,12 +156,12 @@ public class MainActivity extends Activity {
 					packages = allPackages;
 				}*/
 
-				if (appListAdapter == null) {
-					appListAdapter = new AppListAdapter(context, packages);
-					listViewApp.setAdapter(appListAdapter);
-				} else {
-					appListAdapter.notifyDataSetChanged();
-				}
+//				if (appListAdapter == null) {
+//					appListAdapter = new AppListAdapter(context, packages);
+//					listViewApp.setAdapter(appListAdapter);
+//				} else {
+//					appListAdapter.notifyDataSetChanged();
+//				}
 
 //				Toast.makeText(context, cs.toString(), Toast.LENGTH_SHORT).show();
 			}

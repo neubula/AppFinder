@@ -1,8 +1,16 @@
 package com.neubula.appfinder;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
+import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,65 +20,56 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created by quadri on 31/12/15.
  */
-public class AppListAdapter extends BaseAdapter implements Filterable {
+public class AppListAdapter extends RecyclerView.Adapter<AppListAdapter.ViewHolder> implements Filterable {
 
     private LayoutInflater inflater = null;
-    Context context = null;
+    Context context = null;private final TypedValue mTypedValue = new TypedValue();
+    private int mBackground;
+//    PackageManager pm;
 
     private List<ApplicationInfo> mOriginalValues; // Original Values
     private List<ApplicationInfo> mDisplayedValues;    // Values to be displayed
 
     public AppListAdapter(Context context, List<ApplicationInfo> packages) {
         this.context = context;
+        context.getTheme().resolveAttribute(R.attr.selectableItemBackground, mTypedValue, true);
+        mBackground = mTypedValue.resourceId;
         this.mDisplayedValues = packages;
-        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//        this.pm = context.getPackageManager();
     }
 
+    @NonNull
     @Override
-    public int getCount() {
-        return mDisplayedValues.size();
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.adapter_app_list, parent, false);
+        view.setBackgroundResource(mBackground);
+        return new ViewHolder(view);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
-    public Object getItem(int position) {
-        return mDisplayedValues.get(position);
-    }
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
-    @Override
-    public long getItemId(int position) {
-        return 0;
-    }
-
-    @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-
-        View view = convertView;
-        final ViewHolder holder;
         final ApplicationInfo packageInfo = mDisplayedValues.get(position);
 
-        if (view == null) {
-            holder = new ViewHolder();
-            view = inflater.inflate(R.layout.adapter_app_list, null);
-
-            holder.appIcon = (ImageView) view.findViewById(R.id.appIcon);
-            holder.appName = (TextView) view.findViewById(R.id.appName);
-            holder.appDetail = (TextView) view.findViewById(R.id.appDetail);
-            holder.appParent = (RelativeLayout) view.findViewById(R.id.appParent);
-
-            view.setTag(holder);
-        } else {
-            holder = (ViewHolder) view.getTag();
-        }
-
         if (packageInfo.packageName != null) {
-            holder.appDetail.setText(packageInfo.packageName);
+            holder.appDetail.setText(packageInfo.className);
+            holder.udf1.setText(ApplicationInfo.getCategoryTitle(context, packageInfo.category));
+            holder.udf2.setText(Integer.valueOf(packageInfo.minSdkVersion).toString());
+            holder.udf3.setText(Integer.valueOf(packageInfo.flags).toString());
+            holder.udf4.setText(packageInfo.backupAgentName);
             Drawable icon = null;
             String lable = null;
             try {
@@ -81,23 +80,44 @@ public class AppListAdapter extends BaseAdapter implements Filterable {
             }
             holder.appIcon.setImageDrawable(icon);
             holder.appName.setText(lable);
+
+            holder.appIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(Intent.ACTION_DELETE);
+                    intent.setData(Uri.parse(packageInfo.packageName));
+                    context.startActivity(intent);
+                }
+            });
         }
 
-        /*view.setOnClickListener(new View.OnClickListener() {
-
+        holder.mView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Context context = v.getContext();
 
+                if (packageInfo != null) {
+                    if (context.getPackageManager().getLaunchIntentForPackage(packageInfo.packageName) != null) {
+                        Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageInfo.packageName);
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "App will not start. No name.", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(context, "App will not start. No package.", Toast.LENGTH_SHORT).show();
+                }
             }
-        });*/
-
-        return view;
+        });
     }
 
-    class ViewHolder {
-        ImageView appIcon;
-        TextView appName, appDetail;
-        RelativeLayout appParent;
+    @Override
+    public long getItemId(int position) {
+        return 0;
+    }
+
+    @Override
+    public int getItemCount() {
+        return mDisplayedValues.size();
     }
 
     @Override
@@ -115,10 +135,10 @@ public class AppListAdapter extends BaseAdapter implements Filterable {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults results = new FilterResults();        // Holds the results of a filtering operation in values
-                List<ApplicationInfo> FilteredArrList = new ArrayList<ApplicationInfo>();
+                List<ApplicationInfo> FilteredArrList = new ArrayList<>();
 
                 if (mOriginalValues == null) {
-                    mOriginalValues = new ArrayList<ApplicationInfo>(mDisplayedValues); // saves the original data in mOriginalValues
+                    mOriginalValues = new ArrayList<>(mDisplayedValues); // saves the original data in mOriginalValues
                 }
 
                 /********
@@ -148,5 +168,26 @@ public class AppListAdapter extends BaseAdapter implements Filterable {
             }
         };
         return filter;
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public final View mView;
+
+        @BindView(R.id.appIcon) ImageView appIcon;
+        @BindView(R.id.appName) TextView appName;
+        @BindView(R.id.appDetail) TextView appDetail;
+        @BindView(R.id.udf1) TextView udf1;
+        @BindView(R.id.udf2) TextView udf2;
+        @BindView(R.id.udf3) TextView udf3;
+        @BindView(R.id.udf4) TextView udf4;
+        @BindView(R.id.appParent) RelativeLayout appParent;
+
+        public String mBoundString;
+
+        public ViewHolder(View view) {
+            super(view);
+            ButterKnife.bind(this, view);
+            mView = view;
+        }
     }
 }

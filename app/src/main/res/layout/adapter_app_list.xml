@@ -2,7 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:paddingBottom="5dp"
     android:paddingTop="5dp"
     android:id="@+id/appParent" >
@@ -30,5 +30,32 @@
         android:layout_toRightOf="@+id/appIcon"
         android:layout_below="@+id/appName"
         android:layout_toEndOf="@+id/appIcon" />
-
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/appIcon"
+        android:layout_below="@+id/appDetail"
+        android:layout_toEndOf="@+id/appIcon"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/udf1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UDF" />
+        <TextView
+            android:id="@+id/udf2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UDF" />
+        <TextView
+            android:id="@+id/udf3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UDF" />
+        <TextView
+            android:id="@+id/udf4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="UDF" />
+    </LinearLayout>
 </RelativeLayout>
